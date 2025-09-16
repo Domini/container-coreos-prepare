@@ -1,0 +1,26 @@
+FROM debian:trixie-slim
+
+RUN --mount=type=tmpfs,target=/var/lib/apt/lists \
+    apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends --no-install-suggests -y install \
+      ca-certificates \
+      cpio \
+      libdigest-sha-perl \
+      parted \
+      qemu-utils \
+      udev \
+      wget \
+      xz-utils \
+      zstd \
+ && apt-get clean
+
+COPY usr/bin /usr/bin
+
+WORKDIR /root
+
+ENV COREOS_VERSION=""
+ENV COREOS_TYPE=""
+ENV COREOS_ARCH=""
+ENV COREOS_NBD_DEVICE_INDEX=""
+
+ENTRYPOINT [ "/usr/bin/coreos-prepare" ]

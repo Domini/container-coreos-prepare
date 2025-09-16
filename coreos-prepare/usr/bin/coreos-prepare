@@ -1,0 +1,24 @@
+#!/bin/bash -ex
+/usr/bin/wget --directory-prefix /root/data --progress dot:giga \
+  "https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/$COREOS_VERSION/$COREOS_ARCH/fedora-coreos-$COREOS_VERSION-$COREOS_TYPE.$COREOS_ARCH.qcow2.xz"
+/usr/bin/unxz --verbose /root/data/fedora-coreos-*.qcow2.xz
+mkdir -p /tmp/boot_efi \
+  /tmp/sysroot/installaux/default \
+  /tmp/sysroot/installaux/root \
+  /tmp/sysroot/installaux/var \
+  /tmp/sysroot/installaux/containers \
+  /tmp/sysroot/installaux/snapshot
+/usr/bin/qemu-nbd --disconnect "/dev/nbd$COREOS_NBD_DEVICE_INDEX" || true
+/usr/bin/qemu-nbd --connect "/dev/nbd$COREOS_NBD_DEVICE_INDEX" /root/data/fedora-coreos-*.qcow2
+/usr/sbin/partprobe "/dev/nbd$COREOS_NBD_DEVICE_INDEX"
+while [ ! -b "/dev/nbd${COREOS_NBD_DEVICE_INDEX}p3" ]; do
+  sleep 0.1
+done
+/usr/bin/mount "/dev/nbd${COREOS_NBD_DEVICE_INDEX}p3" /tmp/boot_efi
+pushd /tmp
+find sysroot -mindepth 1 | /usr/bin/cpio --create -H newc --verbose | /usr/bin/zstd --compress >>/tmp/boot_efi/ostree/fedora-coreos-*/initramfs-*.img
+popd
+/usr/bin/umount /tmp/boot_efi
+/usr/bin/qemu-nbd --disconnect "/dev/nbd$COREOS_NBD_DEVICE_INDEX"
+mv --force "/root/data/fedora-coreos-$COREOS_VERSION-$COREOS_TYPE.$COREOS_ARCH.qcow2" \
+  "/root/data/prepared-fedora-coreos-$COREOS_VERSION-$COREOS_TYPE.$COREOS_ARCH-$(/usr/bin/shasum -a256 /root/data/fedora-coreos-*.qcow2 | /usr/bin/grep -Po '^\S+').qcow2"
