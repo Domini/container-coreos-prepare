@@ -1,5 +1,7 @@
 [Container]
 ContainerName=coreos-prepare-%i
+Entrypoint=[ "/bin/sh" ]
+Exec=-e -c "trap 'exit 0' TERM; while :; do :; done & kill -STOP $!; wait $!"
 Image=ghcr.io/domini/coreos-prepare:latest
 Mount=type=volume,source=coreos-prepare-data@.volume,target=/root/data
 PodmanArgs=--privileged
