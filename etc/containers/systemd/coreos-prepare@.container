@@ -1,0 +1,12 @@
+[Container]
+ContainerName=coreos-prepare-%i
+Image=ghcr.io/domini/coreos-prepare:latest
+Mount=type=volume,source=coreos-prepare-data@.volume,target=/root/data
+PodmanArgs=--privileged
+Pull=newer
+ReadOnly=true
+Volume=/dev:/dev
+
+[Service]
+ExecStartPre=/usr/sbin/modprobe nbd
+Type=oneshot
