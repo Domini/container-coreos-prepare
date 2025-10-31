@@ -1,0 +1,8 @@
+[Volume]
+Device=tmpfs
+Group=1000
+Options=context=system_u:object_r:container_file_t:s0
+ServiceName=coreos-prepare-data-volume@
+Type=tmpfs
+User=1000
+VolumeName=coreos-prepare-%i-data
